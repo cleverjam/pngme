@@ -4,6 +4,11 @@ use std::str::FromStr;
 
 use crate::{Error, Result};
 
+const ANCILLARY_BIT: usize = 0;
+const PRIVATE_BIT: usize = 1;
+const RESERVED_BIT: usize = 2;
+const SAFE_TO_COPY_BIT: usize = 3;
+
 /// A validated PNG chunk type. See the PNG spec for more details.
 /// http://www.libpng.org/pub/png/spec/1.2/PNG-Structure.html
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,28 +24,29 @@ impl ChunkType {
 
     /// Returns the property state of the first byte as described in the PNG spec
     pub fn is_critical(&self) -> bool {
-        self.value[0].is_ascii_uppercase()
+        self.value[ANCILLARY_BIT].is_ascii_uppercase()
     }
 
     /// Returns the property state of the second byte as described in the PNG spec
     pub fn is_public(&self) -> bool {
-        !self.value[1].is_ascii_lowercase()
+        !self.value[PRIVATE_BIT].is_ascii_lowercase()
     }
 
     /// Returns the property state of the third byte as described in the PNG spec
     pub fn is_reserved_bit_valid(&self) -> bool {
-        self.value[2].is_ascii_uppercase()
+        self.value[RESERVED_BIT].is_ascii_uppercase()
     }
 
     /// Returns the property state of the fourth byte as described in the PNG spec
     pub fn is_safe_to_copy(&self) -> bool {
-        self.value[3].is_ascii_lowercase()
+        self.value[SAFE_TO_COPY_BIT].is_ascii_lowercase()
     }
 
     /// Returns true if the reserved byte is valid and all four bytes are represented by the characters A-Z or a-z.
     /// Note that this chunk type should always be valid as it is validated during construction.
     pub fn is_valid(&self) -> bool {
-        self.value[0].is_ascii_uppercase() && self.value[2].is_ascii_uppercase()
+        self.value[ANCILLARY_BIT].is_ascii_uppercase()
+            && self.value[RESERVED_BIT].is_ascii_uppercase()
     }
 
     /// Valid bytes are represented by the characters A-Z or a-z
@@ -54,7 +60,6 @@ impl TryFrom<[u8; 4]> for ChunkType {
 
     fn try_from(bytes: [u8; 4]) -> Result<Self> {
         let is_valid = bytes.iter().all(ChunkType::is_valid_byte);
-
         if !is_valid {
             Err("Invalid bytes".into())
         } else {
@@ -65,7 +70,14 @@ impl TryFrom<[u8; 4]> for ChunkType {
 
 impl fmt::Display for ChunkType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}", self.value[0].escape_ascii(), self.value[1].escape_ascii(), self.value[2].escape_ascii(), self.value[3].escape_ascii())
+        write!(
+            f,
+            "{}{}{}{}",
+            self.value[ANCILLARY_BIT].escape_ascii(),
+            self.value[PRIVATE_BIT].escape_ascii(),
+            self.value[RESERVED_BIT].escape_ascii(),
+            self.value[SAFE_TO_COPY_BIT].escape_ascii()
+        )
     }
 }
 
@@ -77,7 +89,7 @@ impl FromStr for ChunkType {
         let is_valid = bytes.iter().all(ChunkType::is_valid_byte);
         return if is_valid {
             Ok(Self {
-                value: <[u8; 4]>::try_from(bytes).unwrap()
+                value: <[u8; 4]>::try_from(bytes).unwrap(),
             })
         } else {
             Err("Invalid bytes".into())
