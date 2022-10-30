@@ -14,7 +14,7 @@ impl Chunk {
     }
 
     pub fn length(&self) -> u32 {
-        0
+        self.data.len() as u32
     }
 
     pub fn chunk_type(&self) -> &ChunkType {
@@ -30,7 +30,7 @@ impl Chunk {
     }
 
     pub fn data_as_string(&self) -> Result<String> {
-        Ok("".to_owned())
+        String::from_utf8(self.data.clone()).map_err(|_| "Bad data".into())
     }
 
     pub fn as_bytes(&self) -> Vec<u8> {
