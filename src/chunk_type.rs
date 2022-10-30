@@ -44,7 +44,7 @@ impl ChunkType {
     }
 
     /// Valid bytes are represented by the characters A-Z or a-z
-    pub fn is_valid_byte(byte: u8) -> bool {
+    pub fn is_valid_byte(byte: &u8) -> bool {
         byte.is_ascii_uppercase() || byte.is_ascii_lowercase()
     }
 }
@@ -53,8 +53,8 @@ impl TryFrom<[u8; 4]> for ChunkType {
     type Error = Error;
 
     fn try_from(bytes: [u8; 4]) -> Result<Self> {
-        let is_valid = bytes.iter().all(|byte| { byte.is_ascii_uppercase() || byte.is_ascii_lowercase() });
-        println!("is_valid: {is_valid}");
+        let is_valid = bytes.iter().all(ChunkType::is_valid_byte);
+        
         if !is_valid {
             Err("Invalid bytes".into())
         } else {
@@ -74,16 +74,14 @@ impl FromStr for ChunkType {
 
     fn from_str(s: &str) -> Result<Self> {
         let bytes = s.as_bytes();
-
-        // TODO: de-duplicate this code:
-        let is_valid = bytes.iter().all(|byte| { byte.is_ascii_uppercase() || byte.is_ascii_lowercase() });
-        if !is_valid {
-            Err("Invalid bytes".into())
-        } else {
+        let is_valid = bytes.iter().all(ChunkType::is_valid_byte);
+        return if is_valid {
             Ok(Self {
                 value: <[u8; 4]>::try_from(bytes).unwrap()
             })
-        }
+        } else {
+            Err("Invalid bytes".into())
+        };
     }
 }
 

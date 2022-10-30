@@ -11,8 +11,8 @@ pub type Error = Box<dyn std::error::Error>;
 pub type Result<T> = std::result::Result<T, Error>;
 
 fn main() -> Result<()> {
-    let chunk = ChunkType::from_str("Ru1t");
+    let chunk = ChunkType::from_str("ruSt").unwrap();
 
-    println!("is_error: {}", chunk.is_err());
+    println!("is_error: {}", chunk.is_critical());
     Ok(())
 }
