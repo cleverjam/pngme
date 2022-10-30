@@ -5,14 +5,17 @@ mod commands;
 mod png;
 
 use std::str::FromStr;
+use crate::chunk::Chunk;
 use crate::chunk_type::ChunkType;
 
 pub type Error = Box<dyn std::error::Error>;
 pub type Result<T> = std::result::Result<T, Error>;
 
 fn main() -> Result<()> {
-    let chunk = ChunkType::from_str("ruSt").unwrap();
+    let chunk = Chunk::new(ChunkType::from_str("RUST")?, vec![123]);
 
-    println!("is_error: {}", chunk.is_critical());
+    println!("chunk display: {}", chunk);
     Ok(())
 }
+
+

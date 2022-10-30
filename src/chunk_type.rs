@@ -54,7 +54,7 @@ impl TryFrom<[u8; 4]> for ChunkType {
 
     fn try_from(bytes: [u8; 4]) -> Result<Self> {
         let is_valid = bytes.iter().all(ChunkType::is_valid_byte);
-        
+
         if !is_valid {
             Err("Invalid bytes".into())
         } else {
