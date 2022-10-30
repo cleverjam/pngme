@@ -1,7 +1,7 @@
-use std::fmt;
-use std::fmt::{Display, Formatter};
 use crate::chunk_type::ChunkType;
 use crate::{Error, Result};
+use std::fmt;
+use std::fmt::{Display, Formatter};
 
 pub struct Chunk {
     chunk_type: ChunkType,
@@ -10,38 +10,30 @@ pub struct Chunk {
 
 impl Chunk {
     pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Self {
-
         Self { chunk_type, data }
     }
 
     pub fn length(&self) -> u32 {
-
         0
     }
 
     pub fn chunk_type(&self) -> &ChunkType {
-
         &self.chunk_type
     }
 
     pub fn data(&self) -> &[u8] {
-
         &self.data
     }
 
     pub fn crc(&self) -> u32 {
-
         0
     }
 
     pub fn data_as_string(&self) -> Result<String> {
-
         Ok("".to_owned())
     }
 
-
     pub fn as_bytes(&self) -> Vec<u8> {
-
         self.data.clone()
     }
 }
@@ -54,10 +46,14 @@ impl TryFrom<&[u8]> for Chunk {
     }
 }
 
-impl Display  for Chunk {
+impl Display for Chunk {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let value = self.data.iter().map(|&data_byte| data_byte.to_string()).collect::<String>();
-        write!(f,"{}",value)
+        let value = self
+            .data
+            .iter()
+            .map(|&data_byte| data_byte.to_string())
+            .collect::<String>();
+        write!(f, "{}", value)
     }
 }
 
@@ -88,7 +84,9 @@ mod tests {
     #[test]
     fn test_new_chunk() {
         let chunk_type = ChunkType::from_str("RuSt").unwrap();
-        let data = "This is where your secret message will be!".as_bytes().to_vec();
+        let data = "This is where your secret message will be!"
+            .as_bytes()
+            .to_vec();
         let chunk = Chunk::new(chunk_type, data);
         assert_eq!(chunk.length(), 42);
         assert_eq!(chunk.crc(), 2882656334);
