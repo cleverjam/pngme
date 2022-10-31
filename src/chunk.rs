@@ -1,20 +1,36 @@
 use crate::chunk_type::ChunkType;
 use crate::{Error, Result};
+use crc::{Crc, CRC_32_ISO_HDLC};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
+#[derive(Debug)]
 pub struct Chunk {
+    length: u32,
     chunk_type: ChunkType,
     data: Vec<u8>,
+    crc: u32,
 }
 
 impl Chunk {
     pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Self {
-        Self { chunk_type, data }
+        let length = data.len() as u32;
+        let crc = Crc::<u32>::new(&CRC_32_ISO_HDLC);
+
+        let mut crc_bytes = chunk_type.bytes().to_vec();
+        crc_bytes.extend(&data);
+
+        let crc_value = crc.checksum(&crc_bytes);
+        Self {
+            length,
+            chunk_type,
+            data,
+            crc: crc_value,
+        }
     }
 
     pub fn length(&self) -> u32 {
-        self.data.len() as u32
+        self.length
     }
 
     pub fn chunk_type(&self) -> &ChunkType {
@@ -26,7 +42,7 @@ impl Chunk {
     }
 
     pub fn crc(&self) -> u32 {
-        0
+        self.crc
     }
 
     pub fn data_as_string(&self) -> Result<String> {
@@ -42,7 +58,32 @@ impl TryFrom<&[u8]> for Chunk {
     type Error = Error;
 
     fn try_from(value: &[u8]) -> Result<Self> {
-        todo!()
+        let length = u32::from_be_bytes(value[0..4].try_into().expect("Wrong length."));
+
+        /* checksum */
+        let data_payload_bytes = &value[4..(length + 8) as usize];
+        let given_crc = u32::from_be_bytes(
+            (&value[(length + 8) as usize..(length + 12) as usize] as &[u8])
+                .try_into()
+                .unwrap(),
+        );
+        let crc = Crc::<u32>::new(&CRC_32_ISO_HDLC);
+        if crc.checksum(data_payload_bytes) != given_crc {
+            return Err("Invalid checksum".into());
+        }
+
+        /* create chunk if checksum ok */
+        let chunk_type_bytes =
+            <&[u8] as TryInto<[u8; 4]>>::try_into(&value[4..8]).expect("Wrong chunk type bytes.");
+        let chunk_type = ChunkType::try_from(chunk_type_bytes).expect("Wrong chunk type.");
+        let data_bytes = &value[8..(length + 8) as usize];
+
+        Ok(Self {
+            length,
+            chunk_type,
+            data: data_bytes.to_vec(),
+            crc: given_crc,
+        })
     }
 }
 

@@ -1,12 +1,12 @@
+use crate::chunk::Chunk;
+use crate::chunk_type::ChunkType;
+use std::str::FromStr;
+
 mod args;
 mod chunk;
 mod chunk_type;
 mod commands;
 mod png;
-
-use std::str::FromStr;
-use crate::chunk::Chunk;
-use crate::chunk_type::ChunkType;
 
 pub type Error = Box<dyn std::error::Error>;
 pub type Result<T> = std::result::Result<T, Error>;
@@ -17,5 +17,3 @@ fn main() -> Result<()> {
     println!("chunk display: {}", chunk);
     Ok(())
 }
-
-
