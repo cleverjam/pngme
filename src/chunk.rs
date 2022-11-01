@@ -58,6 +58,9 @@ impl TryFrom<&[u8]> for Chunk {
     type Error = Error;
 
     fn try_from(value: &[u8]) -> Result<Self> {
+        if value.len() < 12 {
+            return Err("Bad chunk".into());
+        }
         let length = u32::from_be_bytes(value[0..4].try_into().expect("Wrong length."));
 
         /* checksum */
